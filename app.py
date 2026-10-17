@@ -4,11 +4,10 @@ st.set_page_config(page_title="Spotify Song Recommendation Engine", layout="wide
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 import plotly.express as px
-import streamlit.components.v1 as components
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_data():
-    df = pd.read_csv("filtered_track_df.csv")
+    df = pd.read_csv("data/filtered_track_df.csv")
     df['genres'] = df.genres.apply(lambda x: [i[1:-1] for i in str(x)[1:-1].split(", ")])
     exploded_track_df = df.explode("genres")
     return exploded_track_df
@@ -44,8 +43,8 @@ with st.container():
     with col3:
         st.markdown("***Choose your genre:***")
         genre = st.radio(
-            "",
-            genre_names, index=genre_names.index("Pop"))
+            "Genre",
+            genre_names, index=genre_names.index("Pop"), label_visibility="collapsed")
     with col1:
         st.markdown("***Choose features to customize:***")
         start_year, end_year = st.slider(
@@ -77,7 +76,7 @@ uris, audios = n_neighbors_uri_audio(genre, start_year, end_year, test_feat)
 
 tracks = []
 for uri in uris:
-    track = """<iframe src="https://open.spotify.com/embed/track/{}" width="260" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>""".format(uri)
+    track = "https://open.spotify.com/embed/track/{}".format(uri)
     tracks.append(track)
 
 if 'previous_inputs' not in st.session_state:
@@ -104,10 +103,7 @@ with st.container():
         for i, (track, audio) in enumerate(zip(current_tracks, current_audios)):
             if i%2==0:
                 with col1:
-                    components.html(
-                        track,
-                        height=400,
-                    )
+                    st.iframe(track, height=380)
                     with st.expander("See more details"):
                         df = pd.DataFrame(dict(
                         r=audio[:5],
@@ -118,10 +114,7 @@ with st.container():
         
             else:
                 with col3:
-                    components.html(
-                        track,
-                        height=400,
-                    )
+                    st.iframe(track, height=380)
                     with st.expander("See more details"):
                         df = pd.DataFrame(dict(
                             r=audio[:5],
